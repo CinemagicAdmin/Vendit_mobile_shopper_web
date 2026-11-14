@@ -27,3 +27,6 @@ steps:
 
 images:
   - 'europe-west1-docker.pkg.dev/mobile-app-480912/cloud-run-source-deploy/sponsorweb:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
