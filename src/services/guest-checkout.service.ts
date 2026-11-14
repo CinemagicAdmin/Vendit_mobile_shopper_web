@@ -11,6 +11,7 @@ import type {
   GuestEnvelope,
   GuestQuote,
 } from '@/types/guest-checkout';
+import type { GuestMenu } from '@/types/guest-menu';
 
 // Deliberately not the shared client: guests have no token, and its 401 handler redirects to login.
 const guestApi = axios.create({
@@ -40,6 +41,9 @@ function paymentPath(paymentId: string): string {
 }
 
 export const guestCheckoutService = {
+  getMenu: (machineId: string) =>
+    unwrap<GuestMenu>(guestApi.get(`/guest-checkouts/machines/${encodeURIComponent(machineId)}`)),
+
   getQuote: (basket: GuestBasket) =>
     unwrap<GuestQuote>(
       guestApi.get('/guest-checkouts/quote', {

@@ -98,6 +98,23 @@ describe('guestStorage', () => {
     expect(store.getItem('vendit_access_token')).toBe('token');
   });
 
+  it('keeps the quoted lines and machine with a payment record, dropping malformed lines', () => {
+    const items = [{ productId: 'a', name: 'Water', imageUrl: null, quantity: 2, unitPrice: 0.15 }];
+    guestStorage.savePayment({ ...record, machineId: 'M-1', items: [...items, { productId: 'b', quantity: 0 }] as never });
+    expect(guestStorage.getPayment('pay-1')).toMatchObject({ machineId: 'M-1', items });
+  });
+
+  it('keeps one cart per machine for three hours and forgets an empty one', () => {
+    guestStorage.saveCart('M-1', [{ productId: 'a', quantity: 2 }]);
+    expect(guestStorage.getCart('M-1')).toEqual([{ productId: 'a', quantity: 2 }]);
+    expect(guestStorage.getCart('M-2')).toEqual([]);
+    guestStorage.saveCart('M-1', []);
+    expect(store.length).toBe(0);
+    guestStorage.saveCart('M-1', [{ productId: 'a', quantity: 2 }]);
+    vi.advanceTimersByTime(3 * HOUR + 1);
+    expect(guestStorage.getCart('M-1')).toEqual([]);
+  });
+
   it('keeps working when storage throws', () => {
     vi.stubGlobal('window', {
       get localStorage(): Storage {

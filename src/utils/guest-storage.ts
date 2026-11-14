@@ -1,12 +1,17 @@
 import { isGuestSecret } from '@/utils/guest-secret';
+import { isCartLine, type CartLine } from '@/utils/guest-cart';
+import type { GuestPaidItem } from '@/types/guest-checkout';
 
 const PREFIX = 'vendit_guest_';
 const PENDING_PREFIX = `${PREFIX}pending:`;
 const PAYMENT_PREFIX = `${PREFIX}payment:`;
 const DISPENSE_PREFIX = `${PREFIX}dispense:`;
+const CART_PREFIX = `${PREFIX}cart:`;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // A pending secret replays its payment, so a repeat purchase of the same basket must not inherit an old one.
 const PENDING_TTL_MS = 60 * 60 * 1000;
+// A cart outlives a visit to the machine only briefly; stock and prices move.
+const CART_TTL_MS = 3 * 60 * 60 * 1000;
 
 export interface GuestPaymentRecord {
   secret: string;
@@ -14,6 +19,8 @@ export interface GuestPaymentRecord {
   payUrl: string;
   basketKey: string;
   orderReference: string | null;
+  machineId?: string;
+  items?: GuestPaidItem[];
   createdAt: number;
 }
 
@@ -53,24 +60,49 @@ function removeEntry(key: string): void {
   safely((store) => store.removeItem(key), undefined);
 }
 
+function optionalText(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+function toPaidItem(value: unknown): GuestPaidItem | null {
+  if (!isRecord(value) || !isCartLine(value)) return null;
+  const unitPrice = typeof value.unitPrice === 'number' && Number.isFinite(value.unitPrice) ? value.unitPrice : 0;
+  return {
+    productId: value.productId,
+    quantity: value.quantity,
+    name: optionalText(value.name),
+    imageUrl: optionalText(value.imageUrl),
+    unitPrice,
+  };
+}
+
+function paidItems(value: unknown): GuestPaidItem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.map(toPaidItem).filter((item): item is GuestPaidItem => item !== null);
+}
+
 function toPaymentRecord(entry: Entry | null): GuestPaymentRecord | null {
   if (!entry || !isGuestSecret(entry.secret)) return null;
-  const { paymentId, payUrl, basketKey, orderReference } = entry;
+  const { paymentId, payUrl, basketKey, orderReference, machineId } = entry;
   if (typeof paymentId !== 'string' || typeof payUrl !== 'string' || typeof basketKey !== 'string') {
     return null;
   }
+  const items = paidItems(entry.items);
   return {
     secret: entry.secret,
     paymentId,
     payUrl,
     basketKey,
-    orderReference: typeof orderReference === 'string' ? orderReference : null,
+    orderReference: optionalText(orderReference),
+    ...(typeof machineId === 'string' ? { machineId } : {}),
+    ...(items ? { items } : {}),
     createdAt: entry.createdAt,
   };
 }
 
 function ttlFor(key: string): number {
-  return key.startsWith(PENDING_PREFIX) ? PENDING_TTL_MS : DAY_MS;
+  if (key.startsWith(PENDING_PREFIX)) return PENDING_TTL_MS;
+  return key.startsWith(CART_PREFIX) ? CART_TTL_MS : DAY_MS;
 }
 
 export const guestStorage = {
@@ -101,6 +133,16 @@ export const guestStorage = {
 
   markDispenseRequested(paymentId: string): void {
     writeEntry(DISPENSE_PREFIX + paymentId, {});
+  },
+
+  getCart(machineId: string): CartLine[] {
+    const lines = readEntry(CART_PREFIX + machineId, CART_TTL_MS)?.lines;
+    return Array.isArray(lines) ? lines.filter(isCartLine) : [];
+  },
+
+  saveCart(machineId: string, lines: CartLine[]): void {
+    if (lines.length === 0) removeEntry(CART_PREFIX + machineId);
+    else writeEntry(CART_PREFIX + machineId, { lines });
   },
 
   sweepExpired(): void {

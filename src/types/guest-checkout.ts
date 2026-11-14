@@ -29,11 +29,20 @@ export interface GuestQuoteLine {
   available: boolean;
 }
 
+export interface GuestPaidItem {
+  productId: string;
+  name: string | null;
+  imageUrl: string | null;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface GuestQuote {
   machine: {
     id: string;
     name: string | null;
     location: string | null;
+    imageUrl?: string | null;
     online: boolean;
   };
   lines: GuestQuoteLine[];

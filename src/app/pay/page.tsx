@@ -2,10 +2,10 @@
 
 import { Suspense, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { ErrorScreen } from '@/components/ui/ErrorScreen';
+import { FeatureErrorView } from '@/components/shop/FeatureErrorView';
 import { GuestCheckout } from '@/components/pay/GuestCheckout';
 import { AppDownloadCta } from '@/components/pay/AppDownloadCta';
+import { CheckoutShell, CheckoutSkeleton } from '@/components/pay/CheckoutParts';
 import { parseGuestBasket } from '@/utils/guest-basket';
 import { guestStorage } from '@/utils/guest-storage';
 
@@ -22,22 +22,24 @@ function PayContent() {
 
   if (!parsed.ok) {
     return (
-      <div className="px-4 pb-10">
-        <ErrorScreen
+      <CheckoutShell>
+        <FeatureErrorView
+          icon="info"
           title="Invalid QR code"
           message="This QR code could not be read. Please scan the QR code on the machine again."
-        />
-        <AppDownloadCta />
-      </div>
+        >
+          <AppDownloadCta />
+        </FeatureErrorView>
+      </CheckoutShell>
     );
   }
 
-  return <GuestCheckout key={parsed.basket.key} basket={parsed.basket} />;
+  return <GuestCheckout basket={parsed.basket} />;
 }
 
 export default function PayPage() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<CheckoutSkeleton />}>
       <PayContent />
     </Suspense>
   );

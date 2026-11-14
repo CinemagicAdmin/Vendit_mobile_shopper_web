@@ -1,4 +1,4 @@
-import type { GuestCheckoutStatus, GuestDispenseResult } from '@/types/guest-checkout';
+import type { GuestCheckoutStatus, GuestDispenseResult, GuestPaidItem } from '@/types/guest-checkout';
 
 export interface GuestOrderSnapshot {
   status: GuestCheckoutStatus | null;
@@ -8,6 +8,8 @@ export interface GuestOrderSnapshot {
   connectionIssue: boolean;
   payUrl: string | null;
   savedReference: string | null;
+  items: GuestPaidItem[];
+  machineId: string | null;
 }
 
 export type GuestViewKind =
@@ -38,6 +40,8 @@ export const EMPTY_SNAPSHOT: GuestOrderSnapshot = {
   connectionIssue: false,
   payUrl: null,
   savedReference: null,
+  items: [],
+  machineId: null,
 };
 
 const PAYMENT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -2,8 +2,7 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { OrderStatusView } from '@/components/pay/OrderStatusView';
+import { OrderStatusView, StatusConfirming } from '@/components/pay/OrderStatusView';
 import { useGuestOrderStatus } from '@/hooks/useGuestOrderStatus';
 import { EMPTY_SNAPSHOT, parseReturnParams, toGuestViewState } from '@/utils/guest-view-state';
 
@@ -15,13 +14,18 @@ function ReturnContent() {
   );
   const snapshot = useGuestOrderStatus(paymentId, tapId);
   const view = toGuestViewState(paymentId ? snapshot : { ...EMPTY_SNAPSHOT, notFound: true });
+  const order = {
+    items: snapshot.items,
+    machineId: snapshot.machineId,
+    machineName: snapshot.status?.machine.name ?? null,
+  };
 
-  return <OrderStatusView view={view} connectionIssue={snapshot.connectionIssue} />;
+  return <OrderStatusView view={view} order={order} connectionIssue={snapshot.connectionIssue} />;
 }
 
 export default function PayReturnPage() {
   return (
-    <Suspense fallback={<LoadingScreen message="Checking your payment..." />}>
+    <Suspense fallback={<StatusConfirming connectionIssue={false} />}>
       <ReturnContent />
     </Suspense>
   );

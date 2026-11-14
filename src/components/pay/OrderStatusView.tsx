@@ -1,72 +1,66 @@
 'use client';
 
-import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Loader2, SearchX, XCircle } from 'lucide-react';
+import { FeatureErrorView } from '@/components/shop/FeatureErrorView';
 import { config } from '@/config/env';
-import { SUPPORT_KINDS, statusCopy, type StatusIcon } from './order-status-copy';
+import { btnClass } from '@/components/shop/Btn';
+import { statusCopy } from './order-status-copy';
+import { DispenseView } from './DispenseView';
+import { StatusProblem } from './StatusProblem';
+import type { GuestPaidItem } from '@/types/guest-checkout';
 import type { GuestViewState } from '@/utils/guest-view-state';
+
+export interface OrderInfo {
+  items: GuestPaidItem[];
+  machineId: string | null;
+  machineName: string | null;
+}
 
 interface OrderStatusViewProps {
   view: GuestViewState;
+  order: OrderInfo;
   connectionIssue: boolean;
 }
 
-const ICONS: Record<StatusIcon, ReactNode> = {
-  spinner: <Loader2 className="h-16 w-16 text-[#4ECDC4] animate-spin" />,
-  success: <CheckCircle2 className="h-16 w-16 text-green-500" />,
-  failed: <XCircle className="h-16 w-16 text-red-500" />,
-  warning: <AlertTriangle className="h-16 w-16 text-amber-500" />,
-  missing: <SearchX className="h-16 w-16 text-gray-400" />,
-};
-
-const actionClass =
-  'inline-flex items-center justify-center rounded-xl font-semibold px-6 py-3 text-base';
-
-function RetryAction({ url }: { url: string | null }) {
-  if (!url) {
-    return (
-      <p className="text-sm text-gray-500 mt-6">Scan the QR code on the machine to try again.</p>
-    );
-  }
+export function StatusConfirming({ connectionIssue }: { connectionIssue: boolean }) {
+  const copy = statusCopy({ kind: 'waiting_payment', reference: null, confirmedUnits: 0, totalUnits: 0, retryUrl: null });
   return (
-    <Link href={url} className={`${actionClass} mt-6 bg-[#4ECDC4] text-white`}>
-      Try again
-    </Link>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-8 text-center">
+      <span className="h-9 w-9 animate-spin rounded-full border-4 border-transparent border-r-vt-primary border-t-vt-primary" aria-hidden />
+      <h1 className="mt-4 text-[16px] font-semibold tracking-[-0.16px]">{copy.title}</h1>
+      <p className="mt-2 max-w-[280px] text-[13px] leading-[1.45] text-vt-grey" aria-live="polite">
+        {copy.body}
+      </p>
+      {connectionIssue && <p className="mt-3 text-[12px] text-vt-yellow">Your connection looks unstable. Still checking...</p>}
+    </div>
   );
 }
 
-export function OrderStatusView({ view, connectionIssue }: OrderStatusViewProps) {
+function NotFound({ view }: { view: GuestViewState }) {
   const copy = statusCopy(view);
-  const supportUrl = SUPPORT_KINDS.has(view.kind) ? config.supportUrl : null;
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-gradient-to-b from-[#e8faf9] to-white">
-      <div className="mb-6">{ICONS[copy.icon]}</div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">{copy.title}</h1>
-      <p className="text-gray-500 max-w-xs" aria-live="polite">
-        {copy.body}
-      </p>
-      {connectionIssue && copy.icon === 'spinner' && (
-        <p className="text-xs text-amber-600 mt-3">Your connection looks unstable. Still checking...</p>
-      )}
-      {view.reference && (
-        <div className="mt-6 rounded-xl bg-white shadow-sm px-5 py-3">
-          <p className="text-xs text-gray-400">Order reference</p>
-          <p className="font-mono font-semibold text-gray-900 select-all">{view.reference}</p>
-        </div>
-      )}
-      {view.kind === 'payment_failed' && <RetryAction url={view.retryUrl} />}
-      {supportUrl && (
-        <a
-          href={supportUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${actionClass} mt-6 border-2 border-[#4ECDC4] text-[#2a9d95]`}
-        >
-          Contact support
-        </a>
-      )}
+    <div className="px-5">
+      <FeatureErrorView icon="missing" title={copy.title} message={copy.body}>
+        {config.supportUrl && (
+          <a href={config.supportUrl} target="_blank" rel="noopener noreferrer" className={`${btnClass('outline')} mx-auto max-w-[200px]`}>
+            Contact support
+          </a>
+        )}
+      </FeatureErrorView>
     </div>
   );
+}
+
+export function OrderStatusView({ view, order, connectionIssue }: OrderStatusViewProps) {
+  switch (view.kind) {
+    case 'waiting_payment':
+      return <StatusConfirming connectionIssue={connectionIssue} />;
+    case 'preparing':
+    case 'dispensing':
+    case 'completed':
+      return <DispenseView view={view} order={order} connectionIssue={connectionIssue} />;
+    case 'not_found':
+      return <NotFound view={view} />;
+    default:
+      return <StatusProblem view={view} order={order} connectionIssue={connectionIssue} />;
+  }
 }

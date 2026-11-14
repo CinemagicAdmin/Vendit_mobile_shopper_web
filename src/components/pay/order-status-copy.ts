@@ -20,8 +20,8 @@ function support(reference: string | null): string {
   return reference ? `contact support with reference ${reference}` : 'contact support';
 }
 
-function dropped(view: GuestViewState): string {
-  return view.totalUnits > 0 ? `${view.confirmedUnits} of ${view.totalUnits} items dropped. ` : '';
+function dispensed(view: GuestViewState): string {
+  return view.totalUnits > 0 ? `${view.confirmedUnits} of ${view.totalUnits} items were dispensed. ` : '';
 }
 
 export function statusCopy(view: GuestViewState): StatusCopy {
@@ -29,11 +29,11 @@ export function statusCopy(view: GuestViewState): StatusCopy {
     case 'waiting_payment':
       return {
         icon: 'spinner',
-        title: 'Confirming your payment',
+        title: 'Confirming your payment\u2026',
         body: 'This usually takes a few seconds. Please keep this page open.',
       };
     case 'payment_failed':
-      return { icon: 'failed', title: 'Payment failed', body: 'You have not been charged.' };
+      return { icon: 'failed', title: 'Payment not completed', body: 'You have not been charged.' };
     case 'review':
       return {
         icon: 'warning',
@@ -41,26 +41,26 @@ export function statusCopy(view: GuestViewState): StatusCopy {
         body: `If your items do not drop, ${support(view.reference)}.`,
       };
     case 'preparing':
-      return { icon: 'spinner', title: 'Payment received', body: 'Sending your order to the machine...' };
+      return { icon: 'spinner', title: 'Preparing your order', body: 'Sending your order to the machine...' };
     case 'dispensing':
-      return {
-        icon: 'spinner',
-        title: 'Dispensing your items',
-        body: `${dropped(view)}Please wait at the machine.`,
-      };
+      return { icon: 'spinner', title: 'Dispensing your items', body: 'Please stay near the machine.' };
     case 'completed':
-      return { icon: 'success', title: 'Collect your items', body: 'Your items are ready at the machine. Enjoy!' };
+      return {
+        icon: 'success',
+        title: 'Ready to collect',
+        body: 'Take your items from the pickup tray at the bottom of the machine.',
+      };
     case 'partial':
       return {
         icon: 'warning',
-        title: 'Some items did not drop',
-        body: `${dropped(view)}For a refund of anything that did not drop, ${support(view.reference)}.`,
+        title: view.confirmedUnits > 0 ? 'Some items were not dispensed' : 'Dispensing not completed',
+        body: `${dispensed(view)}For a refund of anything that did not drop, ${support(view.reference)}.`,
       };
     case 'machine_offline':
       return {
         icon: 'warning',
-        title: 'The machine is not responding',
-        body: `Your items could not be sent to the machine yet. If nothing drops, ${support(view.reference)} for a refund.`,
+        title: "We couldn't start your vend",
+        body: `The machine is not responding, so your items could not be sent to it yet. If nothing drops, ${support(view.reference)} for a refund.`,
       };
     case 'not_found':
       return {
