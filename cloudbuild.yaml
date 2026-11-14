@@ -1,0 +1,29 @@
+
+steps:
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/mobile-app-480912/cloud-run-source-deploy/sponsorweb:$COMMIT_SHA'
+      - .
+
+  # Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - push
+      - 'europe-west1-docker.pkg.dev/mobile-app-480912/cloud-run-source-deploy/sponsorweb:$COMMIT_SHA'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - sponsorweb
+      - '--image=europe-west1-docker.pkg.dev/mobile-app-480912/cloud-run-source-deploy/sponsorweb:$COMMIT_SHA'
+      - '--region=europe-west1'
+      - '--platform=managed'
+
+images:
+  - 'europe-west1-docker.pkg.dev/mobile-app-480912/cloud-run-source-deploy/sponsorweb:$COMMIT_SHA'
