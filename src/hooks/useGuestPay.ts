@@ -6,7 +6,8 @@ import { guestCheckoutService } from '@/services/guest-checkout.service';
 import { guestStorage } from '@/utils/guest-storage';
 import { generateGuestSecret } from '@/utils/guest-secret';
 import { submitGuestCheckout, type GuestSubmitDeps } from '@/utils/guest-submit';
-import { formatMoney, roundMoney } from '@/utils/money';
+import { formatPrice, roundMoney } from '@/utils/money';
+import { paidItems } from '@/utils/guest-cart-url';
 import {
   checkoutErrorMessage,
   isPriceMismatch,
@@ -20,6 +21,9 @@ interface GuestPayState {
   error: string | null;
   priceNotice: string | null;
 }
+
+// An edited basket starts clean: a notice about the old one would mislead.
+type KeyedPayState = GuestPayState & { basketKey: string };
 
 type RefreshQuote = () => Promise<GuestQuote | null>;
 
@@ -52,7 +56,7 @@ async function failureState(error: GuestApiError, refreshQuote: RefreshQuote): P
   if (isPriceMismatch(error)) {
     const quote = await refreshQuote();
     if (quote) {
-      const amount = formatMoney(quote.total, quote.currency);
+      const amount = formatPrice(quote.total, quote.currency);
       return { ...IDLE, priceNotice: `The price changed to ${amount}. Tap pay again to confirm.` };
     }
   } else if (error.status === 409 || REQUOTE_CODES.has(error.code ?? '')) {
@@ -64,14 +68,16 @@ async function failureState(error: GuestApiError, refreshQuote: RefreshQuote): P
 export function useGuestPay(basket: GuestBasket, refreshQuote: RefreshQuote) {
   const router = useRouter();
   const inFlight = useRef(false);
-  const [state, setState] = useState<GuestPayState>(IDLE);
+  const [keyed, setKeyed] = useState<KeyedPayState>({ ...IDLE, basketKey: basket.key });
+  const state: GuestPayState = keyed.basketKey === basket.key ? keyed : IDLE;
+  const setState = (next: GuestPayState) => setKeyed({ ...next, basketKey: basket.key });
 
   useEffect(() => {
     // Coming back from the payment page via the back button restores a frozen page with the button still locked.
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
       inFlight.current = false;
-      setState(IDLE);
+      setKeyed((current) => ({ ...current, ...IDLE }));
     };
     window.addEventListener('pageshow', onPageShow);
     return () => window.removeEventListener('pageshow', onPageShow);
@@ -95,6 +101,8 @@ export function useGuestPay(basket: GuestBasket, refreshQuote: RefreshQuote) {
         payUrl: `${window.location.pathname}${window.location.search}`,
         basketKey: basket.key,
         orderReference: start.orderReference,
+        machineId: quote.machine.id,
+        items: paidItems(quote),
       });
       const checkoutUrl = safeCheckoutUrl(start.checkoutUrl);
       if (checkoutUrl) window.location.assign(checkoutUrl);

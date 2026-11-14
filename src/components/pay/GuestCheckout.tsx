@@ -1,64 +1,104 @@
 'use client';
 
-import { AlertCircle, Info } from 'lucide-react';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { ErrorScreen } from '@/components/ui/ErrorScreen';
-import { useGuestQuote } from '@/hooks/useGuestQuote';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { HintToast } from '@/components/shop/HintToast';
+import { useCanGoBack } from '@/hooks/useCanGoBack';
+import { useCheckoutDraft } from '@/hooks/useCheckoutDraft';
 import { useGuestPay } from '@/hooks/useGuestPay';
-import { quoteErrorCopy } from '@/utils/guest-api-error';
-import { PayMachineCard } from './PayMachineCard';
+import { useGuestQuote } from '@/hooks/useGuestQuote';
+import { useHintToast } from '@/hooks/useHintToast';
+import { addOne, removeOne } from '@/utils/guest-cart';
+import { checkoutView, machineUrl, quoteMatches } from '@/utils/guest-cart-url';
+import { guestStorage } from '@/utils/guest-storage';
+import { CheckoutEmpty, CheckoutError, CheckoutShell, CheckoutSkeleton } from './CheckoutParts';
+import { PayWith, payMethods } from './PayActions';
+import { PayBar } from './PayBar';
 import { PayLineItems } from './PayLineItems';
-import { PayActions } from './PayActions';
+import { PayMachineCard } from './PayMachineCard';
+import { PayNotice } from './PayNotice';
 import { PayUnavailable } from './PayUnavailable';
-import type { GuestBasket } from '@/types/guest-checkout';
-
-function PayNotice({ tone, text }: { tone: 'error' | 'info'; text: string }) {
-  const Icon = tone === 'error' ? AlertCircle : Info;
-  const colors =
-    tone === 'error'
-      ? 'bg-red-50 border-red-200 text-red-700'
-      : 'bg-[#e8faf9] border-[#a8edea] text-[#1f7a74]';
-  return (
-    <div role="status" className={`rounded-xl border p-3 flex gap-2 text-sm ${colors}`}>
-      <Icon className="h-4 w-4 shrink-0 mt-0.5" />
-      <span>{text}</span>
-    </div>
-  );
-}
+import type { GuestBasket, GuestPaymentMethod } from '@/types/guest-checkout';
 
 export function GuestCheckout({ basket }: { basket: GuestBasket }) {
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
   const { state, refresh, retry } = useGuestQuote(basket);
   const { pending, error, priceNotice, pay } = useGuestPay(basket, refresh);
+  const { toast, show } = useHintToast();
+  const draft = useCheckoutDraft(basket);
+  const [chosen, setChosen] = useState<GuestPaymentMethod | null>(null);
 
-  if (state.kind === 'loading') return <LoadingScreen message="Loading your order..." />;
+  const quote = state.kind === 'ready' ? state.quote : null;
+  const fresh = quote !== null && !draft.editing && quoteMatches(quote, basket.lines);
+  const machineId = quote?.machine.id ?? null;
 
-  if (state.kind === 'error') {
-    const copy = quoteErrorCopy(state.error);
-    return (
-      <ErrorScreen
-        title={copy.title}
-        message={copy.message}
-        onRetry={copy.canRetry ? retry : undefined}
-      />
-    );
-  }
+  useEffect(() => {
+    // The URL basket wins: the machine page reads this cart back.
+    if (fresh && machineId) guestStorage.saveCart(machineId, basket.lines);
+  }, [fresh, machineId, basket.lines]);
 
-  const { quote } = state;
+  if (state.kind === 'loading') return <CheckoutSkeleton />;
+  if (state.kind === 'error') return <CheckoutError error={state.error} onRetry={retry} />;
+
+  const ready = state.quote;
+  const moreUrl = machineUrl(ready.machine.id);
+  const view = checkoutView(ready, draft.lines);
+  const methods = payMethods(ready.paymentMethods);
+  const method = chosen && methods.includes(chosen) ? chosen : (methods[0] ?? null);
+  const paying = pending !== null;
+  const canPay = fresh && ready.sellable && method !== null && !paying;
+
+  const increase = (productId: string) => {
+    const change = addOne(draft.lines, productId, Number.POSITIVE_INFINITY);
+    if (change.ok) draft.change(change.lines);
+    else show(change.message);
+  };
+  const decrease = (productId: string) => {
+    const next = removeOne(draft.lines, productId);
+    if (next.length === 0) guestStorage.saveCart(ready.machine.id, []);
+    draft.change(next);
+  };
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#c8f0ec_0%,#e8faf9_30%,#f0fdfb_60%,#ffffff_100%)] px-4 pt-6 pb-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Your order</h1>
-      <p className="text-sm text-gray-500 mb-4">Check your items, then pay to collect them.</p>
-      <div className="space-y-4">
-        <PayMachineCard machine={quote.machine} />
-        <PayLineItems lines={quote.lines} total={quote.total} currency={quote.currency} />
-        {error && <PayNotice tone="error" text={error} />}
-        {priceNotice && <PayNotice tone="info" text={priceNotice} />}
-        {quote.sellable ? (
-          <PayActions quote={quote} pending={pending} onPay={(method) => void pay(method, quote)} />
+    <CheckoutShell onBack={canGoBack ? () => router.back() : undefined}>
+      <div className="space-y-2.5">
+        <PayMachineCard machine={ready.machine} />
+        {draft.lines.length === 0 ? (
+          <CheckoutEmpty moreUrl={moreUrl} />
         ) : (
-          <PayUnavailable reason={quote.unavailableReason} />
+          <>
+            <PayLineItems
+              lines={view.lines}
+              currency={ready.currency}
+              moreUrl={moreUrl}
+              locked={paying}
+              onIncrease={increase}
+              onDecrease={decrease}
+            />
+            {error && <PayNotice tone="error" title="Payment not started">{error}</PayNotice>}
+            {priceNotice && <PayNotice tone="info" title="Prices updated">{priceNotice}</PayNotice>}
+            {ready.sellable || !fresh ? (
+              <PayWith methods={methods} selected={method} onSelect={setChosen} disabled={paying} redirecting={paying} />
+            ) : (
+              <PayUnavailable reason={ready.unavailableReason} />
+            )}
+          </>
         )}
       </div>
-    </div>
+      {draft.lines.length > 0 && (
+        <PayBar
+          units={view.units}
+          total={view.total}
+          currency={ready.currency}
+          canPay={canPay}
+          paying={paying}
+          onPay={() => {
+            if (method) void pay(method, ready);
+          }}
+        />
+      )}
+      <HintToast toast={toast} />
+    </CheckoutShell>
   );
 }

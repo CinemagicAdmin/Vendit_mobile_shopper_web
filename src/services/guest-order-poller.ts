@@ -1,5 +1,6 @@
 import { guestCheckoutService } from '@/services/guest-checkout.service';
 import { guestStorage, type GuestPaymentRecord } from '@/utils/guest-storage';
+import { machineIdFromPayUrl } from '@/utils/guest-cart-url';
 import { toGuestApiError, type GuestApiError } from '@/utils/guest-api-error';
 import {
   DISPENSE_COOLDOWN_MS,
@@ -42,6 +43,8 @@ export class GuestOrderPoller {
     this.emit({
       payUrl: this.record?.payUrl ?? null,
       savedReference: this.record?.orderReference ?? null,
+      items: this.record?.items ?? [],
+      machineId: this.record?.machineId ?? machineIdFromPayUrl(this.record?.payUrl ?? null),
       notFound: !hasProof,
     });
     if (hasProof) void this.tick();
@@ -116,6 +119,8 @@ export class GuestOrderPoller {
     if (status.outcome !== 'succeeded' && status.outcome !== 'failed') return;
     this.pendingCleared = true;
     guestStorage.clearPendingSecret(this.record.basketKey);
+    // A paid basket is bought; the machine page should open with an empty cart.
+    if (status.outcome === 'succeeded' && this.record.machineId) guestStorage.saveCart(this.record.machineId, []);
   }
 
   private schedule(delayMs: number): void {

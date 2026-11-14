@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { ShopFrame } from '@/components/shop/ShopFrame';
 
 export const metadata: Metadata = {
   title: 'Vend IT - Pay',
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function PayLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <ShopFrame>{children}</ShopFrame>;
 }

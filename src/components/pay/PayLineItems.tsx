@@ -1,62 +1,47 @@
 'use client';
 
-import Image from 'next/image';
-import { Package } from 'lucide-react';
-import { formatMoney } from '@/utils/money';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
+import { CartLineTile } from '@/components/shop/CartLineTile';
+import { formatPrice } from '@/utils/money';
 import type { GuestQuoteLine } from '@/types/guest-checkout';
 
 interface PayLineItemsProps {
   lines: GuestQuoteLine[];
-  total: number;
   currency: string;
+  moreUrl: string;
+  locked: boolean;
+  onIncrease: (productId: string) => void;
+  onDecrease: (productId: string) => void;
 }
 
-function LineItem({ line, currency }: { line: GuestQuoteLine; currency: string }) {
-  const name = line.name ?? 'Item';
+export function PayLineItems({ lines, currency, moreUrl, locked, onIncrease, onDecrease }: PayLineItemsProps) {
   return (
-    <li className="flex items-center gap-3 p-3">
-      <div className="w-14 h-14 rounded-xl bg-[#f0fdfb] flex items-center justify-center shrink-0 overflow-hidden">
-        {line.imageUrl ? (
-          <Image
-            src={line.imageUrl}
-            alt={name}
-            width={56}
-            height={56}
-            className="object-contain max-h-14"
-            unoptimized
+    <section aria-label="Your items" className="space-y-2.5">
+      <div className="flex items-center justify-between px-1 pt-1.5">
+        <h2 className="text-[15px] font-semibold">Your items</h2>
+        <Link href={moreUrl} className="flex items-center text-[12px] font-medium text-vt-press">
+          Add more items
+          <ChevronRight className="h-[18px] w-[18px]" />
+        </Link>
+      </div>
+      {lines.map((line) => (
+        <div key={line.productId} className="rounded-2xl bg-white p-3 shadow-[0_0_8px_rgba(221,235,249,0.8)]">
+          <CartLineTile
+            name={line.name ?? 'Item'}
+            imageUrl={line.imageUrl}
+            total={formatPrice(line.lineTotal, currency)}
+            quantity={line.quantity}
+            thumbSize={56}
+            disabled={locked}
+            onIncrease={() => onIncrease(line.productId)}
+            onDecrease={() => onDecrease(line.productId)}
+            note={
+              !line.available && <p className="mt-0.5 text-[11px] font-semibold text-vt-danger">Not available right now</p>
+            }
           />
-        ) : (
-          <Package className="h-6 w-6 text-gray-300" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 line-clamp-2">{name}</p>
-        <p className="text-xs text-gray-500 mt-0.5">
-          {line.quantity} x {formatMoney(line.unitPrice, currency)}
-        </p>
-        {!line.available && (
-          <p className="text-xs font-semibold text-red-500 mt-0.5">Not available</p>
-        )}
-      </div>
-      <span className="text-sm font-bold text-gray-900 shrink-0">
-        {formatMoney(line.lineTotal, currency)}
-      </span>
-    </li>
-  );
-}
-
-export function PayLineItems({ lines, total, currency }: PayLineItemsProps) {
-  return (
-    <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-      <ul className="divide-y divide-gray-100">
-        {lines.map((line) => (
-          <LineItem key={line.productId} line={line} currency={currency} />
-        ))}
-      </ul>
-      <div className="flex items-center justify-between px-4 py-3 bg-[#e8faf9]">
-        <span className="font-semibold text-gray-700">Total</span>
-        <span className="text-lg font-bold text-[#2a9d95]">{formatMoney(total, currency)}</span>
-      </div>
-    </div>
+        </div>
+      ))}
+    </section>
   );
 }

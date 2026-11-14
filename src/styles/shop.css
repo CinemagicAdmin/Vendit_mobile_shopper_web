@@ -1,0 +1,171 @@
+/* overflow-x: hidden on html/body makes body a scroll box, which stops the app bar and chips pinning. */
+html:has(.vt-shop),
+body:has(.vt-shop) {
+  overflow-x: clip;
+}
+
+.vt-no-scrollbar {
+  scrollbar-width: none;
+}
+.vt-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.vt-shimmer {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: vt-shimmer 1.2s linear infinite;
+}
+.vt-shimmer-light {
+  background: linear-gradient(90deg, #efefef 25%, #ffffff 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: vt-shimmer 1.2s linear infinite;
+}
+@keyframes vt-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.vt-rise {
+  animation: vt-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vt-rise {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.vt-breathe {
+  animation: vt-breathe 1200ms ease-in-out infinite alternate;
+}
+@keyframes vt-breathe {
+  from { box-shadow: 0 0 6px 0 rgba(85, 193, 195, 0.45), 0 2px 6px rgba(34, 111, 114, 0.25); }
+  to { box-shadow: 0 0 14px 2px rgba(85, 193, 195, 0.75), 0 2px 6px rgba(34, 111, 114, 0.25); }
+}
+
+.vt-shine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  animation: vt-shine 3200ms ease-in-out 1760ms infinite;
+  pointer-events: none;
+}
+@keyframes vt-shine {
+  0% { transform: translateX(-100%); }
+  45%, 100% { transform: translateX(260%); }
+}
+
+.vt-sheet-up {
+  animation: vt-sheet-up 300ms cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+@keyframes vt-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+.vt-fade-in {
+  animation: vt-fade-in 220ms ease-out both;
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.vt-toast {
+  animation: vt-toast 1600ms ease-out both;
+}
+@keyframes vt-toast {
+  0% { opacity: 0; transform: translateY(8px); }
+  12%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+
+.vt-spin {
+  animation: vt-spin 1600ms linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes vt-spin {
+  to { transform: rotate(360deg); }
+}
+
+.vt-sweep {
+  animation: vt-sweep 1400ms ease-in-out infinite;
+}
+@keyframes vt-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+.vt-drop-in {
+  animation: vt-drop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vt-drop-in {
+  0% { opacity: 0; transform: translateY(-34px) scale(0.78); }
+  55% { opacity: 1; transform: translateY(5px) scale(1.04); }
+  80% { transform: translateY(-2px) scale(1); }
+  100% { opacity: 1; transform: none; }
+}
+
+.vt-pop {
+  animation: vt-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+@keyframes vt-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.vt-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  animation: vt-confetti var(--dur) cubic-bezier(0.22, 1, 0.36, 1) var(--delay) both;
+}
+@keyframes vt-confetti {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  70% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(0.6);
+  }
+}
+
+@property --vt-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.vt-exclusive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--vt-angle),
+    transparent 0deg 220deg,
+    rgba(85, 193, 195, 0.55) 290deg,
+    #b9efee 340deg,
+    #55c1c3 355deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: vt-angle 3.2s linear infinite;
+  pointer-events: none;
+}
+@keyframes vt-angle {
+  to { --vt-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-rise, .vt-breathe, .vt-shine, .vt-exclusive::before, .vt-sheet-up, .vt-spin, .vt-sweep, .vt-drop-in, .vt-pop, .vt-confetti,
+  .vt-shimmer, .vt-shimmer-light {
+    animation: none;
+  }
+  .vt-confetti, .vt-shine {
+    display: none;
+  }
+}
