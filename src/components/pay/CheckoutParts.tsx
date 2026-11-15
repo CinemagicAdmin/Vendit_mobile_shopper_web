@@ -7,7 +7,7 @@ import { AppBar } from '@/components/shop/AppBar';
 import { btnClass } from '@/components/shop/Btn';
 import { EmptyStateView, FeatureErrorView } from '@/components/shop/FeatureErrorView';
 import { quoteErrorCopy, type GuestApiError } from '@/utils/guest-api-error';
-import { AppDownloadCta } from './AppDownloadCta';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 
 const SKELETON = [
   { height: 110, gap: 0 },
@@ -49,7 +49,7 @@ export function CheckoutError({ error, onRetry }: { error: GuestApiError; onRetr
   return (
     <CheckoutShell>
       <FeatureErrorView icon={icon} title={copy.title} message={copy.message} onRetry={copy.canRetry ? onRetry : undefined}>
-        {!copy.canRetry && <AppDownloadCta />}
+        {!copy.canRetry && <AppPromoBanner place="general" />}
       </FeatureErrorView>
     </CheckoutShell>
   );

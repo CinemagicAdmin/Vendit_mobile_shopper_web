@@ -7,7 +7,7 @@ import { useDismissed, usePlatform } from '@/hooks/useAppPromo';
 import { storeLinksFor } from '@/utils/app-store';
 import { cn } from '@/utils/cn';
 
-export type PromoPlace = 'machine' | 'checkout' | 'collect';
+export type PromoPlace = 'machine' | 'checkout' | 'collect' | 'general';
 
 const COPY: Record<PromoPlace, { title: string; body: string }> = {
   machine: {
@@ -21,6 +21,10 @@ const COPY: Record<PromoPlace, { title: string; body: string }> = {
   collect: {
     title: 'Get rewarded next time',
     body: 'Shop with the Vend IT app to earn Vendos rewards and get app-only offers.',
+  },
+  general: {
+    title: 'Get the Vend IT app',
+    body: 'Pay at any Vend IT machine in a few taps, earn Vendos rewards and get app-only offers.',
   },
 };
 
@@ -49,7 +53,7 @@ export function AppPromoBanner({ place, className }: { place: PromoPlace; classN
     <section
       aria-label="Get the Vend IT app"
       className={cn(
-        'vt-fade-in relative overflow-hidden rounded-2xl p-4 text-white',
+        'vt-fade-in relative overflow-hidden rounded-2xl p-4 text-left text-white',
         'bg-[linear-gradient(135deg,#1F6265_0%,#2D9295_55%,#55C1C3_100%)] shadow-[0_6px_16px_rgba(31,98,101,0.25)]',
         className,
       )}

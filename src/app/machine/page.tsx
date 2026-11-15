@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FeatureErrorView } from '@/components/shop/FeatureErrorView';
 import { MachineScreen } from '@/components/machine/MachineScreen';
-import { AppDownloadCta } from '@/components/pay/AppDownloadCta';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 
 const MAX_ID_LENGTH = 64;
 
@@ -19,7 +19,7 @@ function MachineContent() {
           title="Invalid QR code"
           message="This QR code could not be read. Please scan the QR code on the machine again."
         >
-          <AppDownloadCta />
+          <AppPromoBanner place="general" />
         </FeatureErrorView>
       </div>
     );

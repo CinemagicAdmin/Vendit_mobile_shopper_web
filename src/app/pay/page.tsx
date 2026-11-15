@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FeatureErrorView } from '@/components/shop/FeatureErrorView';
 import { GuestCheckout } from '@/components/pay/GuestCheckout';
-import { AppDownloadCta } from '@/components/pay/AppDownloadCta';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { CheckoutShell, CheckoutSkeleton } from '@/components/pay/CheckoutParts';
 import { parseGuestBasket } from '@/utils/guest-basket';
 import { guestStorage } from '@/utils/guest-storage';
@@ -28,7 +28,7 @@ function PayContent() {
           title="Invalid QR code"
           message="This QR code could not be read. Please scan the QR code on the machine again."
         >
-          <AppDownloadCta />
+          <AppPromoBanner place="general" />
         </FeatureErrorView>
       </CheckoutShell>
     );

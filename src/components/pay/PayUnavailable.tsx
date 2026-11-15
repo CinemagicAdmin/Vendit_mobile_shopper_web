@@ -1,6 +1,6 @@
 'use client';
 
-import { AppDownloadCta } from './AppDownloadCta';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { PayNotice } from './PayNotice';
 import type { GuestUnavailableReason } from '@/types/guest-checkout';
 
@@ -25,7 +25,7 @@ export function PayUnavailable({ reason }: { reason: GuestUnavailableReason | nu
       <PayNotice tone="warning" title="This order cannot be paid here">
         {unavailableCopy(reason)} You have not been charged.
       </PayNotice>
-      <AppDownloadCta />
+      <AppPromoBanner place="general" />
     </div>
   );
 }
