@@ -3,7 +3,7 @@
 import { AppBar } from '@/components/shop/AppBar';
 import { FeatureErrorView, type FeatureErrorIcon } from '@/components/shop/FeatureErrorView';
 import { MachineHeroSkeleton } from '@/components/shop/MachineHeroCard';
-import { AppDownloadCta } from '@/components/pay/AppDownloadCta';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { useGuestMenu } from '@/hooks/useGuestMenu';
 import type { GuestApiError } from '@/utils/guest-api-error';
 import { CategoryChipsShimmer } from './CategoryChips';
@@ -58,7 +58,7 @@ export function MachineScreen({ machineId, productKey }: { machineId: string; pr
     return (
       <div className="px-5">
         <FeatureErrorView icon={copy.icon} title={copy.title} message={copy.message} onRetry={copy.canRetry ? retry : undefined}>
-          {!copy.canRetry && <AppDownloadCta />}
+          {!copy.canRetry && <AppPromoBanner place="general" />}
         </FeatureErrorView>
       </div>
     );
