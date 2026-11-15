@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { platformOf, storeLinksFor } from './app-store';
+import { platformOf, storeUrlFor } from './app-store';
 
 const URLS = { ios: 'https://apps.apple.com/app/id1', android: 'https://play.google.com/store/apps/details?id=x' };
 
@@ -21,22 +21,19 @@ describe('platformOf', () => {
   });
 });
 
-describe('storeLinksFor', () => {
-  it('gives an iPhone only the App Store, and an Android phone only Google Play', () => {
-    expect(storeLinksFor('ios', URLS)).toEqual([
-      { store: 'ios', label: 'Download on the App Store', href: URLS.ios },
-    ]);
-    expect(storeLinksFor('android', URLS)).toEqual([
-      { store: 'android', label: 'Get it on Google Play', href: URLS.android },
-    ]);
+describe('storeUrlFor', () => {
+  it('sends an iPhone to the App Store and an Android phone to Google Play', () => {
+    expect(storeUrlFor('ios', URLS)).toBe(URLS.ios);
+    expect(storeUrlFor('android', URLS)).toBe(URLS.android);
   });
 
-  it('gives anything else both stores', () => {
-    expect(storeLinksFor('other', URLS).map((link) => link.label)).toEqual(['App Store', 'Google Play']);
+  it('sends a desktop to the App Store', () => {
+    expect(storeUrlFor('other', URLS)).toBe(URLS.ios);
   });
 
-  it('falls back to whatever store is configured', () => {
-    expect(storeLinksFor('ios', { ios: null, android: URLS.android }).map((l) => l.store)).toEqual(['android']);
-    expect(storeLinksFor('other', { ios: null, android: null })).toEqual([]);
+  it('falls back to whichever store is configured', () => {
+    expect(storeUrlFor('ios', { ios: null, android: URLS.android })).toBe(URLS.android);
+    expect(storeUrlFor('android', { ios: URLS.ios, android: null })).toBe(URLS.ios);
+    expect(storeUrlFor('other', { ios: null, android: null })).toBeNull();
   });
 });

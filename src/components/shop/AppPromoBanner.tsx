@@ -1,10 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { Gift, Sparkles, Tag, X, type LucideIcon } from 'lucide-react';
+import { Download, Gift, Sparkles, Tag, X, type LucideIcon } from 'lucide-react';
 import { config } from '@/config/env';
 import { useDismissed, usePlatform } from '@/hooks/useAppPromo';
-import { storeLinksFor } from '@/utils/app-store';
+import { storeUrlFor } from '@/utils/app-store';
 import { cn } from '@/utils/cn';
 
 export type PromoPlace = 'machine' | 'checkout' | 'collect' | 'general';
@@ -45,8 +45,8 @@ function PerkChip({ label, icon: Icon }: { label: string; icon: LucideIcon }) {
 
 export function AppPromoBanner({ place, className }: { place: PromoPlace; className?: string }) {
   const { dismissed, dismiss } = useDismissed(place);
-  const links = storeLinksFor(usePlatform(), { ios: config.iosStoreUrl, android: config.androidStoreUrl });
-  if (dismissed || links.length === 0) return null;
+  const storeUrl = storeUrlFor(usePlatform(), { ios: config.iosStoreUrl, android: config.androidStoreUrl });
+  if (dismissed || !storeUrl) return null;
   const copy = COPY[place];
 
   return (
@@ -82,19 +82,15 @@ export function AppPromoBanner({ place, className }: { place: PromoPlace; classN
           <PerkChip key={perk.label} {...perk} />
         ))}
       </div>
-      <div className="relative mt-3.5 flex gap-2">
-        {links.map((link) => (
-          <a
-            key={link.store}
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-10 flex-1 items-center justify-center rounded-[12px] bg-white text-[13px] font-semibold text-vt-press shadow-[0_2px_6px_rgba(0,0,0,0.12)] active:translate-y-px"
-          >
-            {link.label}
-          </a>
-        ))}
-      </div>
+      <a
+        href={storeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative mt-3.5 flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] bg-white text-[13px] font-semibold text-vt-press shadow-[0_2px_6px_rgba(0,0,0,0.12)] active:translate-y-px"
+      >
+        <Download className="h-4 w-4" aria-hidden />
+        Get the app
+      </a>
     </section>
   );
 }

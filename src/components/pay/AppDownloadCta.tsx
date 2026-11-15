@@ -4,7 +4,7 @@ import { Smartphone } from 'lucide-react';
 import { config } from '@/config/env';
 import { btnClass } from '@/components/shop/Btn';
 import { usePlatform } from '@/hooks/useAppPromo';
-import { storeLinksFor } from '@/utils/app-store';
+import { storeUrlFor } from '@/utils/app-store';
 import { cn } from '@/utils/cn';
 
 interface AppDownloadCtaProps {
@@ -16,8 +16,7 @@ const DEFAULT_MESSAGE = 'Pay at any machine in a few taps and keep track of your
 
 export function AppDownloadCta({ message = DEFAULT_MESSAGE, bare }: AppDownloadCtaProps) {
   const { iosStoreUrl, androidStoreUrl, appName } = config;
-  const links = storeLinksFor(usePlatform(), { ios: iosStoreUrl, android: androidStoreUrl });
-  const hasLinks = links.length > 0;
+  const storeUrl = storeUrlFor(usePlatform(), { ios: iosStoreUrl, android: androidStoreUrl });
 
   return (
     <div className={cn('text-left', !bare && 'rounded-2xl bg-white p-3 shadow-[0_0_8px_rgba(221,235,249,0.8)]')}>
@@ -28,18 +27,14 @@ export function AppDownloadCta({ message = DEFAULT_MESSAGE, bare }: AppDownloadC
         <div className="ml-3 min-w-0">
           <p className="text-[14px] font-semibold leading-[1.2]">Get the {appName} app</p>
           <p className="mt-[3px] text-[12px] leading-[1.4] text-vt-grey">
-            {hasLinks ? message : `${message} Search for ${appName} on the App Store or Google Play.`}
+            {storeUrl ? message : `${message} Search for ${appName} on the App Store or Google Play.`}
           </p>
         </div>
       </div>
-      {hasLinks && (
-        <div className="mt-3 flex gap-2.5">
-          {links.map((link) => (
-            <a key={link.store} href={link.href} target="_blank" rel="noopener noreferrer" className={btnClass('outline')}>
-              {link.label}
-            </a>
-          ))}
-        </div>
+      {storeUrl && (
+        <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={cn(btnClass('outline'), 'mt-3')}>
+          Get the app
+        </a>
       )}
     </div>
   );
