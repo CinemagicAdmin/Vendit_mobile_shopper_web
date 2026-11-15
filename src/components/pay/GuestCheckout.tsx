@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { HintToast } from '@/components/shop/HintToast';
 import { useCanGoBack } from '@/hooks/useCanGoBack';
 import { useCheckoutDraft } from '@/hooks/useCheckoutDraft';
@@ -79,7 +80,10 @@ export function GuestCheckout({ basket }: { basket: GuestBasket }) {
             {error && <PayNotice tone="error" title="Payment not started">{error}</PayNotice>}
             {priceNotice && <PayNotice tone="info" title="Prices updated">{priceNotice}</PayNotice>}
             {ready.sellable || !fresh ? (
-              <PayWith methods={methods} selected={method} onSelect={setChosen} disabled={paying} redirecting={paying} />
+              <>
+                <PayWith methods={methods} selected={method} onSelect={setChosen} disabled={paying} redirecting={paying} />
+                <AppPromoBanner place="checkout" />
+              </>
             ) : (
               <PayUnavailable reason={ready.unavailableReason} />
             )}

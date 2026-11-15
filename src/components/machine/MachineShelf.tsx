@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmptyStateView } from '@/components/shop/FeatureErrorView';
 import { HintToast } from '@/components/shop/HintToast';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { MachineHeroCard } from '@/components/shop/MachineHeroCard';
 import { useCanGoBack } from '@/hooks/useCanGoBack';
 import { useHintToast } from '@/hooks/useHintToast';
@@ -100,6 +101,7 @@ export function MachineShelf({ menu, productKey }: { menu: GuestMenu; productKey
         <div ref={heroRef} className="origin-top">
           <MachineHeroCard name={machineName} location={menu.machine.location} imageUrl={menu.machine.imageUrl} />
         </div>
+        {!search.open && <AppPromoBanner place="machine" className="mt-3" />}
       </div>
       {!search.open && menu.categories.length > 0 && (
         <CategoryChips ref={chipsRef} categories={menu.categories} selectedId={categoryId} onSelect={setCategoryId} />

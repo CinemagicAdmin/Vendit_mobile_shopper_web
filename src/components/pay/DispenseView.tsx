@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { btnClass } from '@/components/shop/Btn';
 import { machineUrl } from '@/utils/guest-cart-url';
 import {
@@ -51,6 +52,7 @@ export function DispenseView({ view, order, connectionIssue }: DispenseViewProps
         <div className="mt-6">
           <DispenseItems rows={dispenseRows(order.items, confirmed, phase)} />
         </div>
+        {done && <AppPromoBanner place="collect" className="mt-6" />}
       </div>
       {done && order.machineId && (
         <footer className="vt-fade-in sticky bottom-0 bg-white px-5 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
