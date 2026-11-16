@@ -12,7 +12,7 @@ import {
   nextPollDelayMs,
   pollTimedOut,
 } from '@/utils/guest-poll-policy';
-import type { GuestAuth, GuestCheckoutStatus } from '@/types/guest-checkout';
+import type { GuestAuth, GuestCheckoutStatus, GuestReturnProof } from '@/types/guest-checkout';
 import type { GuestOrderSnapshot } from '@/utils/guest-view-state';
 
 type Emit = (patch: Partial<GuestOrderSnapshot>) => void;
@@ -31,15 +31,16 @@ export class GuestOrderPoller {
   private readonly record: GuestPaymentRecord | null;
   private readonly auth: GuestAuth;
 
-  constructor(paymentId: string, tapId: string | null, emit: Emit) {
+  constructor(paymentId: string, proof: GuestReturnProof, emit: Emit) {
     this.paymentId = paymentId;
     this.emit = emit;
     this.record = guestStorage.getPayment(paymentId);
-    this.auth = { secret: this.record?.secret ?? null, tapId };
+    this.auth = { secret: this.record?.secret ?? null, tapId: proof.tapId, mfPaymentId: proof.mfPaymentId };
   }
 
   start(): void {
-    const hasProof = this.auth.secret !== null || this.auth.tapId !== null;
+    const { secret, tapId, mfPaymentId } = this.auth;
+    const hasProof = secret !== null || tapId !== null || mfPaymentId !== null;
     this.emit({
       payUrl: this.record?.payUrl ?? null,
       savedReference: this.record?.orderReference ?? null,

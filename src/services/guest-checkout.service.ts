@@ -29,10 +29,16 @@ async function unwrap<T>(request: Promise<AxiosResponse<GuestEnvelope<T>>>): Pro
   }
 }
 
+// The backend takes one gateway proof at a time.
+function proofParams(auth: GuestAuth): Record<string, string> {
+  if (auth.tapId) return { tapId: auth.tapId };
+  return auth.mfPaymentId ? { mfPaymentId: auth.mfPaymentId } : {};
+}
+
 function authOptions(auth: GuestAuth) {
   return {
     headers: auth.secret ? { Authorization: `Guest ${auth.secret}` } : {},
-    params: auth.tapId ? { tapId: auth.tapId } : {},
+    params: proofParams(auth),
   };
 }
 
