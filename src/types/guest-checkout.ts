@@ -117,9 +117,14 @@ export interface GuestDispenseResponse {
   status: GuestCheckoutStatus;
 }
 
-export interface GuestAuth {
-  secret: string | null;
+// What the gateway sent the shopper back with: Tap's charge id or MyFatoorah's payment id.
+export interface GuestReturnProof {
   tapId: string | null;
+  mfPaymentId: string | null;
+}
+
+export interface GuestAuth extends GuestReturnProof {
+  secret: string | null;
 }
 
 export interface GuestEnvelope<T> {

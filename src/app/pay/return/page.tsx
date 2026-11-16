@@ -8,11 +8,12 @@ import { EMPTY_SNAPSHOT, parseReturnParams, toGuestViewState } from '@/utils/gue
 
 function ReturnContent() {
   const searchParams = useSearchParams();
-  const { paymentId, tapId } = parseReturnParams(
-    searchParams.get('paymentId'),
-    searchParams.get('tap_id'),
-  );
-  const snapshot = useGuestOrderStatus(paymentId, tapId);
+  const { paymentId, tapId, mfPaymentId } = parseReturnParams({
+    order: searchParams.get('order'),
+    paymentId: searchParams.get('paymentId'),
+    tapId: searchParams.get('tap_id'),
+  });
+  const snapshot = useGuestOrderStatus(paymentId, { tapId, mfPaymentId });
   const view = toGuestViewState(paymentId ? snapshot : { ...EMPTY_SNAPSHOT, notFound: true });
   const order = {
     items: snapshot.items,

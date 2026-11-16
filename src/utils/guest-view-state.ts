@@ -1,4 +1,9 @@
-import type { GuestCheckoutStatus, GuestDispenseResult, GuestPaidItem } from '@/types/guest-checkout';
+import type {
+  GuestCheckoutStatus,
+  GuestDispenseResult,
+  GuestPaidItem,
+  GuestReturnProof,
+} from '@/types/guest-checkout';
 
 export interface GuestOrderSnapshot {
   status: GuestCheckoutStatus | null;
@@ -46,11 +51,32 @@ export const EMPTY_SNAPSHOT: GuestOrderSnapshot = {
 
 const PAYMENT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TAP_ID_PATTERN = /^chg_[A-Za-z0-9_]{6,64}$/;
+const MF_PAYMENT_ID_PATTERN = /^\d{1,30}$/;
 
-export function parseReturnParams(paymentId: string | null, tapId: string | null) {
+export interface ReturnQuery {
+  order: string | null;
+  paymentId: string | null;
+  tapId: string | null;
+}
+
+export interface ReturnParams extends GuestReturnProof {
+  paymentId: string | null;
+}
+
+function matching(value: string | null, pattern: RegExp): string | null {
+  return value && pattern.test(value) ? value : null;
+}
+
+// MyFatoorah returns to ?order=<id> plus its own paymentId; Tap returns to ?paymentId=<id>&tap_id=.
+export function parseReturnParams(query: ReturnQuery): ReturnParams {
+  const order = matching(query.order, PAYMENT_ID_PATTERN);
+  if (order) {
+    return { paymentId: order, tapId: null, mfPaymentId: matching(query.paymentId, MF_PAYMENT_ID_PATTERN) };
+  }
   return {
-    paymentId: paymentId && PAYMENT_ID_PATTERN.test(paymentId) ? paymentId : null,
-    tapId: tapId && TAP_ID_PATTERN.test(tapId) ? tapId : null,
+    paymentId: matching(query.paymentId, PAYMENT_ID_PATTERN),
+    tapId: matching(query.tapId, TAP_ID_PATTERN),
+    mfPaymentId: null,
   };
 }
 

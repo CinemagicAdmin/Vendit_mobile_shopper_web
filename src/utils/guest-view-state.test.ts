@@ -5,6 +5,7 @@ import {
   safePayUrl,
   toGuestViewState,
   type GuestOrderSnapshot,
+  type ReturnQuery,
 } from '@/utils/guest-view-state';
 import type { GuestCheckoutStatus, GuestDispense, GuestOutcome } from '@/types/guest-checkout';
 
@@ -112,15 +113,53 @@ describe('safePayUrl', () => {
 });
 
 describe('parseReturnParams', () => {
-  it('keeps a uuid payment id and a Tap charge id', () => {
-    expect(parseReturnParams('6F1D3F7E-8B2A-4C1D-9E3F-0A1B2C3D4E5F', 'chg_TS02A1234567')).toEqual({
-      paymentId: '6F1D3F7E-8B2A-4C1D-9E3F-0A1B2C3D4E5F',
+  const ORDER = '6F1D3F7E-8B2A-4C1D-9E3F-0A1B2C3D4E5F';
+  const MF_PAYMENT_ID = '07077323767392271273';
+  const query = (patch: Partial<ReturnQuery>): ReturnQuery => ({
+    order: null,
+    paymentId: null,
+    tapId: null,
+    ...patch,
+  });
+
+  it('keeps a uuid payment id and a Tap charge id from a Tap return', () => {
+    expect(parseReturnParams(query({ paymentId: ORDER, tapId: 'chg_TS02A1234567' }))).toEqual({
+      paymentId: ORDER,
       tapId: 'chg_TS02A1234567',
+      mfPaymentId: null,
+    });
+  });
+
+  it("reads a MyFatoorah return's order and its payment id as the proof", () => {
+    expect(parseReturnParams(query({ order: ORDER, paymentId: MF_PAYMENT_ID }))).toEqual({
+      paymentId: ORDER,
+      tapId: null,
+      mfPaymentId: MF_PAYMENT_ID,
+    });
+  });
+
+  it('never sends a Tap charge id with a MyFatoorah return', () => {
+    const parsed = parseReturnParams(query({ order: ORDER, paymentId: MF_PAYMENT_ID, tapId: 'chg_TS02A1234567' }));
+    expect(parsed).toMatchObject({ tapId: null, mfPaymentId: MF_PAYMENT_ID });
+  });
+
+  it('falls back to a uuid paymentId when the order is malformed', () => {
+    expect(parseReturnParams(query({ order: 'nope', paymentId: ORDER }))).toMatchObject({ paymentId: ORDER });
+    expect(parseReturnParams(query({ order: 'nope', paymentId: MF_PAYMENT_ID }))).toEqual({
+      paymentId: null,
+      tapId: null,
+      mfPaymentId: null,
     });
   });
 
   it('drops malformed values', () => {
-    expect(parseReturnParams('not-a-uuid', 'chg_x')).toEqual({ paymentId: null, tapId: null });
-    expect(parseReturnParams(null, 'tok_123456789')).toEqual({ paymentId: null, tapId: null });
+    const empty = { paymentId: null, tapId: null, mfPaymentId: null };
+    expect(parseReturnParams(query({ paymentId: 'not-a-uuid', tapId: 'chg_x' }))).toEqual(empty);
+    expect(parseReturnParams(query({ tapId: 'tok_123456789' }))).toEqual(empty);
+    expect(parseReturnParams(query({ order: ORDER, paymentId: '0707x' }))).toEqual({
+      paymentId: ORDER,
+      tapId: null,
+      mfPaymentId: null,
+    });
   });
 });
