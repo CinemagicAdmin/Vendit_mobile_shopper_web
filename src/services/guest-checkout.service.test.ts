@@ -36,3 +36,13 @@ describe('guest status and dispense proofs', () => {
     });
   });
 });
+
+describe('guest checkout link', () => {
+  it('proves the payment with the guest secret and sends the visitor ids', async () => {
+    const payload = { visitorId: 'V'.repeat(22), visitId: 'S'.repeat(22), paymentId: PAYMENT_ID };
+    await guestCheckoutService.linkVisitor('S'.repeat(43), payload);
+    expect(http.post).toHaveBeenCalledWith('/web-funnel/checkout-links', payload, {
+      headers: { Authorization: `Guest ${'S'.repeat(43)}` },
+    });
+  });
+});

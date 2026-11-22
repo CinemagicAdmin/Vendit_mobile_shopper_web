@@ -8,11 +8,17 @@ const MESSAGES = {
   checkout: 'Order from this machine in the app.',
 };
 
-export function AppOnlySheet({ reason, onClose }: { reason: keyof typeof MESSAGES; onClose: () => void }) {
+interface AppOnlySheetProps {
+  reason: keyof typeof MESSAGES;
+  machineId: string;
+  onClose: () => void;
+}
+
+export function AppOnlySheet({ reason, machineId, onClose }: AppOnlySheetProps) {
   return (
     <BottomSheet label="Get the app" onClose={onClose}>
       <div className="pb-3 pt-2">
-        <AppDownloadCta bare message={MESSAGES[reason]} />
+        <AppDownloadCta bare place="app_only" machineId={machineId} message={MESSAGES[reason]} />
       </div>
     </BottomSheet>
   );

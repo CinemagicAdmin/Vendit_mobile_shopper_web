@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 Every push to `main` deploys. A Cloud Build trigger runs `cloudbuild.yaml`: it builds the `Dockerfile`, pushes the
 image to Artifact Registry and deploys the Cloud Run service `sponsorweb` in `europe-west1`. The build shows on the
 commit as the `rmgpgab-sponsorweb-...` check.
+
+## Configuration
+
+`src/config/env.ts` reads these public, build-time values; each has a default, and `cloudbuild.yaml` passes none of
+them today, so the deployed site runs on the defaults.
+
+- `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_MAX_DISTANCE_METERS`
+- `NEXT_PUBLIC_IOS_STORE_URL`, `NEXT_PUBLIC_ANDROID_STORE_URL` - store pages; an `app.link` URL is refused
+- `NEXT_PUBLIC_SUPPORT_URL` - optional support link
+- `NEXT_PUBLIC_APP_LINK_URL` - the Branch link behind Get the app (default `https://invite.tryvendit.com/machine`,
+  `off` falls back to the raw store pages); see ADR-498

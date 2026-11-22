@@ -127,6 +127,12 @@ export interface GuestAuth extends GuestReturnProof {
   secret: string | null;
 }
 
+export interface GuestCheckoutLinkPayload {
+  visitorId: string;
+  visitId: string;
+  paymentId: string;
+}
+
 export interface GuestEnvelope<T> {
   status: number;
   message: string;
