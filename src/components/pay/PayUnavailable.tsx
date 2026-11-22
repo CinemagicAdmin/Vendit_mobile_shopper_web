@@ -19,13 +19,13 @@ export function unavailableCopy(reason: GuestUnavailableReason | null): string {
   return (reason ? REASON_COPY[reason] : undefined) ?? FALLBACK_COPY;
 }
 
-export function PayUnavailable({ reason }: { reason: GuestUnavailableReason | null }) {
+export function PayUnavailable({ reason, machineId }: { reason: GuestUnavailableReason | null; machineId?: string }) {
   return (
     <div className="space-y-2.5">
       <PayNotice tone="warning" title="This order cannot be paid here">
         {unavailableCopy(reason)} You have not been charged.
       </PayNotice>
-      <AppPromoBanner place="general" />
+      <AppPromoBanner place="general" machineId={machineId} />
     </div>
   );
 }

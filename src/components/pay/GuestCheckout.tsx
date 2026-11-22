@@ -9,6 +9,7 @@ import { useCheckoutDraft } from '@/hooks/useCheckoutDraft';
 import { useGuestPay } from '@/hooks/useGuestPay';
 import { useGuestQuote } from '@/hooks/useGuestQuote';
 import { useHintToast } from '@/hooks/useHintToast';
+import { useMachineEventOnce } from '@/hooks/useWebFunnel';
 import { addOne, removeOne } from '@/utils/guest-cart';
 import { checkoutView, machineUrl, quoteMatches } from '@/utils/guest-cart-url';
 import { guestStorage } from '@/utils/guest-storage';
@@ -33,6 +34,8 @@ export function GuestCheckout({ basket }: { basket: GuestBasket }) {
   const quote = state.kind === 'ready' ? state.quote : null;
   const fresh = quote !== null && !draft.editing && quoteMatches(quote, basket.lines);
   const machineId = quote?.machine.id ?? null;
+  const bannerShown = quote !== null && draft.lines.length > 0 && (quote.sellable || !fresh);
+  useMachineEventOnce('checkout_viewed', bannerShown ? machineId : null);
 
   useEffect(() => {
     // The URL basket wins: the machine page reads this cart back.
@@ -82,10 +85,10 @@ export function GuestCheckout({ basket }: { basket: GuestBasket }) {
             {ready.sellable || !fresh ? (
               <>
                 <PayWith methods={methods} selected={method} onSelect={setChosen} disabled={paying} redirecting={paying} />
-                <AppPromoBanner place="checkout" />
+                <AppPromoBanner place="checkout" machineId={ready.machine.id} />
               </>
             ) : (
-              <PayUnavailable reason={ready.unavailableReason} />
+              <PayUnavailable reason={ready.unavailableReason} machineId={ready.machine.id} />
             )}
           </>
         )}

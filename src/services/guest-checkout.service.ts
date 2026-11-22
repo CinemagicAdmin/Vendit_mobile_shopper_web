@@ -5,6 +5,7 @@ import type {
   CreateGuestCheckoutPayload,
   GuestAuth,
   GuestBasket,
+  GuestCheckoutLinkPayload,
   GuestCheckoutStart,
   GuestCheckoutStatus,
   GuestDispenseResponse,
@@ -75,4 +76,8 @@ export const guestCheckoutService = {
     unwrap<GuestDispenseResponse>(
       guestApi.post(`${paymentPath(paymentId)}/dispense`, {}, authOptions(auth)),
     ),
+
+  linkVisitor: async (secret: string, payload: GuestCheckoutLinkPayload): Promise<void> => {
+    await guestApi.post('/web-funnel/checkout-links', payload, { headers: { Authorization: `Guest ${secret}` } });
+  },
 };

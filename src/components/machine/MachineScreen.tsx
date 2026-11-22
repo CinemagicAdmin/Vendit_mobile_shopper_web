@@ -5,6 +5,7 @@ import { FeatureErrorView, type FeatureErrorIcon } from '@/components/shop/Featu
 import { MachineHeroSkeleton } from '@/components/shop/MachineHeroCard';
 import { AppPromoBanner } from '@/components/shop/AppPromoBanner';
 import { useGuestMenu } from '@/hooks/useGuestMenu';
+import { useMachineEventOnce } from '@/hooks/useWebFunnel';
 import type { GuestApiError } from '@/utils/guest-api-error';
 import { CategoryChipsShimmer } from './CategoryChips';
 import { MachineShelf } from './MachineShelf';
@@ -52,6 +53,7 @@ function MachineSkeleton() {
 
 export function MachineScreen({ machineId, productKey }: { machineId: string; productKey: string | null }) {
   const { state, retry } = useGuestMenu(machineId);
+  useMachineEventOnce('menu_viewed', state.kind === 'ready' ? state.menu.machine.id : null);
   if (state.kind === 'loading') return <MachineSkeleton />;
   if (state.kind === 'error') {
     const copy = menuErrorCopy(state.error);

@@ -101,7 +101,7 @@ export function MachineShelf({ menu, productKey }: { menu: GuestMenu; productKey
         <div ref={heroRef} className="origin-top">
           <MachineHeroCard name={machineName} location={menu.machine.location} imageUrl={menu.machine.imageUrl} />
         </div>
-        {!search.open && <AppPromoBanner place="machine" className="mt-3" />}
+        {!search.open && <AppPromoBanner place="machine" machineId={menu.machine.id} className="mt-3" />}
       </div>
       {!search.open && menu.categories.length > 0 && (
         <CategoryChips ref={chipsRef} categories={menu.categories} selectedId={categoryId} onSelect={setCategoryId} />
@@ -141,7 +141,7 @@ export function MachineShelf({ menu, productKey }: { menu: GuestMenu; productKey
         />
       )}
       {overlay?.kind === 'health' && <HealthSheet rating={overlay.rating} onClose={() => setOverlay(null)} />}
-      {overlay?.kind === 'app' && <AppOnlySheet reason={overlay.reason} onClose={() => setOverlay(null)} />}
+      {overlay?.kind === 'app' && <AppOnlySheet reason={overlay.reason} machineId={menu.machine.id} onClose={() => setOverlay(null)} />}
       <HintToast toast={toast} />
     </div>
   );

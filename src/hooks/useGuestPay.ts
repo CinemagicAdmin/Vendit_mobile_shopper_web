@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { guestCheckoutService } from '@/services/guest-checkout.service';
+import { flushWebEvents, trackOncePerVisit } from '@/services/web-funnel';
 import { guestStorage } from '@/utils/guest-storage';
 import { generateGuestSecret } from '@/utils/guest-secret';
 import { submitGuestCheckout, type GuestSubmitDeps } from '@/utils/guest-submit';
@@ -104,6 +105,8 @@ export function useGuestPay(basket: GuestBasket, refreshQuote: RefreshQuote) {
         machineId: quote.machine.id,
         items: paidItems(quote),
       });
+      trackOncePerVisit(`payment_started:${start.paymentId}`, 'payment_started', { machineId: quote.machine.id });
+      flushWebEvents();
       const checkoutUrl = safeCheckoutUrl(start.checkoutUrl);
       if (checkoutUrl) window.location.assign(checkoutUrl);
       else router.replace(`/pay/return?paymentId=${encodeURIComponent(start.paymentId)}`);

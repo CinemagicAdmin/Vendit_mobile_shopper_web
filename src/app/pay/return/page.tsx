@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { OrderStatusView, StatusConfirming } from '@/components/pay/OrderStatusView';
 import { useGuestOrderStatus } from '@/hooks/useGuestOrderStatus';
+import { useCheckoutLink } from '@/hooks/useWebFunnel';
 import { EMPTY_SNAPSHOT, parseReturnParams, toGuestViewState } from '@/utils/guest-view-state';
 
 function ReturnContent() {
@@ -14,6 +15,7 @@ function ReturnContent() {
     tapId: searchParams.get('tap_id'),
   });
   const snapshot = useGuestOrderStatus(paymentId, { tapId, mfPaymentId });
+  useCheckoutLink(paymentId, snapshot.status !== null);
   const view = toGuestViewState(paymentId ? snapshot : { ...EMPTY_SNAPSHOT, notFound: true });
   const order = {
     items: snapshot.items,
